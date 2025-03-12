@@ -1,0 +1,210 @@
+// client/web/src/pages/housing.js
+import { useState, useEffect } from 'react';
+import Head from 'next/head';
+import { useRouter } from 'next/router';
+import Layout from '../components/Layout';
+import PropertyCard from '../components/housing/PropertyCard';
+import FilterSidebar from '../components/housing/FilterSidebar';
+import { getHousingListings } from '../services/housingService';
+
+export default function Housing() {
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState('rent');
+  const [properties, setProperties] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [filters, setFilters] = useState({
+    minPrice: 0,
+    maxPrice: 10000,
+    bedrooms: 0,
+    bathrooms: 0,
+    propertyType: 'any',
+    location: '',
+  });
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+
+  // Update active tab based on query param
+  useEffect(() => {
+    const { type } = router.query;
+    if (type && (type === 'rent' || type === 'buy')) {
+      setActiveTab(type);
+    }
+  }, [router.query]);
+
+  // Fetch properties when filters or tab changes
+  useEffect(() => {
+    fetchProperties(true);
+  }, [activeTab, filters]);
+
+  // Fetch properties
+  const fetchProperties = async (reset = false) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const currentPage = reset ? 1 : page;
+      
+      const params = {
+        type: activeTab,
+        page: currentPage,
+        limit: 12,
+        minPrice: filters.minPrice,
+        maxPrice: filters.maxPrice,
+        bedrooms: filters.bedrooms > 0 ? filters.bedrooms : undefined,
+        bathrooms: filters.bathrooms > 0 ? filters.bathrooms : undefined,
+        propertyType: filters.propertyType !== 'any' ? filters.propertyType : undefined,
+        location: filters.location || undefined,
+      };
+      
+      const result = await getHousingListings(params);
+      
+      if (reset) {
+        setProperties(result.data);
+        setPage(1);
+      } else {
+        setProperties([...properties, ...result.data]);
+        setPage(currentPage + 1);
+      }
+      
+      setHasMore(result.data.length === 12);
+      setLoading(false);
+    } catch (err) {
+      setError('Failed to load properties. Please try again.');
+      setLoading(false);
+      console.error('Error fetching properties:', err);
+    }
+  };
+
+  // Switch tabs
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    router.push({
+      pathname: '/housing',
+      query: { type: tab },
+    }, undefined, { shallow: true });
+  };
+
+  // Apply filters
+  const applyFilters = (newFilters) => {
+    setFilters({ ...filters, ...newFilters });
+  };
+
+  // Load more properties
+  const loadMore = () => {
+    if (!loading && hasMore) {
+      fetchProperties();
+    }
+  };
+
+  return (
+    <Layout>
+      <Head>
+        <title>{activeTab === 'rent' ? 'Rental Properties' : 'Properties for Sale'} | Relocation App</title>
+        <meta name="description" content="Find the perfect home in your new country with our comprehensive listings." />
+      </Head>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">
+            {activeTab === 'rent' ? 'Rental Properties' : 'Properties for Sale'}
+          </h1>
+          
+          {/* Tab Switcher */}
+          <div className="flex bg-gray-100 rounded-lg p-1">
+            <button
+              className={`px-4 py-2 rounded-md text-sm font-medium ${
+                activeTab === 'rent'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-700 hover:text-gray-900'
+              }`}
+              onClick={() => handleTabChange('rent')}
+            >
+              Rent
+            </button>
+            <button
+              className={`px-4 py-2 rounded-md text-sm font-medium ${
+                activeTab === 'buy'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-700 hover:text-gray-900'
+              }`}
+              onClick={() => handleTabChange('buy')}
+            >
+              Buy
+            </button>
+          </div>
+        </div>
+
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Filter Sidebar */}
+          <div className="w-full lg:w-64">
+            <FilterSidebar filters={filters} onApplyFilters={applyFilters} />
+          </div>
+
+          {/* Property Grid */}
+          <div className="flex-1">
+            {error ? (
+              <div className="text-center py-12">
+                <p className="text-red-500 mb-4">{error}</p>
+                <button
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  onClick={() => fetchProperties(true)}
+                >
+                  Retry
+                </button>
+              </div>
+            ) : properties.length === 0 && !loading ? (
+              <div className="text-center py-16">
+                <svg
+                  className="mx-auto h-16 w-16 text-gray-300"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                  />
+                </svg>
+                <h3 className="mt-4 text-lg font-medium text-gray-900">No properties found</h3>
+                <p className="mt-1 text-gray-500">Try adjusting your filters to see more results.</p>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {properties.map((property) => (
+                    <PropertyCard
+                      key={property.id}
+                      property={property}
+                      onFavoriteToggle={(id) => console.log('Toggle favorite:', id)}
+                    />
+                  ))}
+                </div>
+
+                {loading && (
+                  <div className="flex justify-center py-6">
+                    <div className="loader" />
+                  </div>
+                )}
+
+                {!loading && hasMore && (
+                  <div className="flex justify-center mt-8">
+                    <button
+                      className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                      onClick={loadMore}
+                    >
+                      Load More
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </Layout>
+  );
+}

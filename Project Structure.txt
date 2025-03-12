@@ -1,0 +1,62 @@
+# Relocation App Project Structure
+
+```
+relocation-app/
+├── client/                      # Frontend applications
+│   ├── web/                     # React.js + Next.js web app
+│   │   ├── public/              # Static assets
+│   │   ├── src/
+│   │   │   ├── components/      # Reusable UI components
+│   │   │   ├── pages/           # Next.js pages
+│   │   │   ├── contexts/        # React Context for state management
+│   │   │   ├── hooks/           # Custom React hooks
+│   │   │   ├── services/        # API services
+│   │   │   ├── styles/          # Global styles
+│   │   │   └── utils/           # Helper functions
+│   │   ├── package.json
+│   │   └── next.config.js
+│   │
+│   └── mobile/                  # React Native mobile app
+│       ├── android/             # Android specific
+│       ├── ios/                 # iOS specific
+│       ├── src/
+│       │   ├── components/      # Reusable UI components
+│       │   ├── navigation/      # Navigation configuration
+│       │   ├── screens/         # Screen components
+│       │   ├── services/        # API services
+│       │   ├── hooks/           # Custom React hooks
+│       │   ├── contexts/        # React Context for state management
+│       │   └── utils/           # Helper functions
+│       ├── App.js
+│       └── package.json
+│
+├── server/                      # Backend application
+│   ├── src/
+│   │   ├── api/                 # API endpoints
+│   │   │   ├── auth/            # Authentication routes
+│   │   │   ├── housing/         # Housing-related routes
+│   │   │   ├── transportation/  # Transportation-related routes
+│   │   │   ├── language/        # Language & culture routes
+│   │   │   ├── legal/           # Legal & government routes
+│   │   │   ├── jobs/            # Jobs & networking routes
+│   │   │   ├── safety/          # Safety & emergency routes
+│   │   │   └── premium/         # Premium features routes
+│   │   ├── config/              # Configuration files
+│   │   ├── controllers/         # Request handlers
+│   │   ├── middleware/          # Custom middleware
+│   │   ├── models/              # Database models
+│   │   ├── services/            # External API integrations
+│   │   ├── utils/               # Helper functions
+│   │   └── app.js               # Express app setup
+│   ├── package.json
+│   └── .env                     # Environment variables
+│
+├── firebase/                    # Firebase configuration
+│   ├── firestore.rules          # Firestore security rules
+│   ├── storage.rules            # Storage security rules
+│   └── functions/               # Cloud Functions
+│       ├── src/                 # Functions source code
+│       └── package.json
+│
+└── README.md                    # Project documentation
+```

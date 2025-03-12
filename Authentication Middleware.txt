@@ -1,0 +1,61 @@
+// server/src/middleware/auth.js
+const { admin } = require('../config/firebase');
+
+// Verify Firebase ID token
+exports.verifyToken = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({
+        status: 'error',
+        message: 'No token provided'
+      });
+    }
+    
+    const token = authHeader.split('Bearer ')[1];
+    
+    // Verify token
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    req.user = decodedToken;
+    
+    next();
+  } catch (error) {
+    console.error('Error verifying token:', error);
+    res.status(401).json({
+      status: 'error',
+      message: 'Unauthorized'
+    });
+  }
+};
+
+// Check premium status
+exports.checkPremiumStatus = async (req, res, next) => {
+  try {
+    const userDoc = await admin.firestore().collection('users').doc(req.user.uid).get();
+    
+    if (!userDoc.exists) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'User not found'
+      });
+    }
+    
+    const userData = userDoc.data();
+    
+    if (!userData.premium) {
+      return res.status(403).json({
+        status: 'error',
+        message: 'Premium subscription required'
+      });
+    }
+    
+    next();
+  } catch (error) {
+    console.error('Error checking premium status:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Something went wrong'
+    });
+  }
+};

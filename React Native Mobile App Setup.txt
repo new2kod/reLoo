@@ -1,0 +1,112 @@
+// client/mobile/App.js
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { AuthProvider } from './src/contexts/AuthContext';
+import { ThemeProvider } from './src/contexts/ThemeContext';
+
+// Auth Screens
+import SplashScreen from './src/screens/SplashScreen';
+import LoginScreen from './src/screens/auth/LoginScreen';
+import RegisterScreen from './src/screens/auth/RegisterScreen';
+import ForgotPasswordScreen from './src/screens/auth/ForgotPasswordScreen';
+
+// Main Screens
+import HomeScreen from './src/screens/HomeScreen';
+import HousingScreen from './src/screens/housing/HousingScreen';
+import TransportationScreen from './src/screens/transportation/TransportationScreen';
+import LanguageScreen from './src/screens/language/LanguageScreen';
+import LegalScreen from './src/screens/legal/LegalScreen';
+import JobsScreen from './src/screens/jobs/JobsScreen';
+import SafetyScreen from './src/screens/safety/SafetyScreen';
+import ProfileScreen from './src/screens/profile/ProfileScreen';
+
+// Icons
+import Ionicons from 'react-native-vector-icons/Ionicons';
+
+const Stack = createStackNavigator();
+const Tab = createBottomTabNavigator();
+
+// Main tab navigator
+const MainTabNavigator = () => {
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName;
+
+          if (route.name === 'Home') {
+            iconName = focused ? 'home' : 'home-outline';
+          } else if (route.name === 'Housing') {
+            iconName = focused ? 'home' : 'home-outline';
+          } else if (route.name === 'Transportation') {
+            iconName = focused ? 'car' : 'car-outline';
+          } else if (route.name === 'Language') {
+            iconName = focused ? 'language' : 'language-outline';
+          } else if (route.name === 'Legal') {
+            iconName = focused ? 'document-text' : 'document-text-outline';
+          } else if (route.name === 'Jobs') {
+            iconName = focused ? 'briefcase' : 'briefcase-outline';
+          } else if (route.name === 'Safety') {
+            iconName = focused ? 'shield' : 'shield-outline';
+          } else if (route.name === 'Profile') {
+            iconName = focused ? 'person' : 'person-outline';
+          }
+
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+      })}
+      tabBarOptions={{
+        activeTintColor: '#4A80F0',
+        inactiveTintColor: 'gray',
+      }}
+    >
+      <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen name="Housing" component={HousingScreen} />
+      <Tab.Screen name="Transportation" component={TransportationScreen} />
+      <Tab.Screen name="Jobs" component={JobsScreen} />
+      <Tab.Screen name="Safety" component={SafetyScreen} />
+      <Tab.Screen name="Profile" component={ProfileScreen} />
+    </Tab.Navigator>
+  );
+};
+
+// Auth navigator
+const AuthNavigator = () => {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="Register" component={RegisterScreen} />
+      <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+    </Stack.Navigator>
+  );
+};
+
+// Root navigator
+const RootNavigator = () => {
+  return (
+    <AuthProvider>
+      <NavigationContainer>
+        <Stack.Navigator initialRouteName="Splash" screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="Splash" component={SplashScreen} />
+          <Stack.Screen name="Auth" component={AuthNavigator} />
+          <Stack.Screen name="Main" component={MainTabNavigator} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </AuthProvider>
+  );
+};
+
+const App = () => {
+  return (
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <RootNavigator />
+      </ThemeProvider>
+    </SafeAreaProvider>
+  );
+};
+
+export default App;

@@ -1,0 +1,192 @@
+// client/mobile/src/components/housing/PropertyCard.js
+import React from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  Dimensions
+} from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+
+const { width } = Dimensions.get('window');
+
+const PropertyCard = ({ property, onPress }) => {
+  const {
+    id,
+    title,
+    price,
+    currency = 'USD',
+    type,
+    address,
+    bedrooms,
+    bathrooms,
+    area,
+    photos,
+    isFavorite = false
+  } = property;
+
+  // Format price with thousand separators
+  const formatPrice = (value) => {
+    return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  };
+
+  return (
+    <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.9}>
+      {/* Property Image */}
+      <View style={styles.imageContainer}>
+        <Image
+          source={{ uri: photos && photos.length > 0 ? photos[0] : 'https://via.placeholder.com/300x200' }}
+          style={styles.image}
+          resizeMode="cover"
+        />
+        
+        {/* Favorite Button */}
+        <TouchableOpacity style={styles.favoriteButton}>
+          <Ionicons
+            name={isFavorite ? 'heart' : 'heart-outline'}
+            size={24}
+            color={isFavorite ? '#e74c3c' : '#fff'}
+          />
+        </TouchableOpacity>
+        
+        {/* Property Type Tag */}
+        <View style={styles.typeTag}>
+          <Text style={styles.typeText}>{type}</Text>
+        </View>
+      </View>
+      
+      {/* Property Details */}
+      <View style={styles.detailsContainer}>
+        {/* Price */}
+        <Text style={styles.price}>
+          {currency === 'USD' ? '$' : currency} {formatPrice(price)}
+          {type === 'rent' && <Text style={styles.periodText}>/month</Text>}
+        </Text>
+        
+        {/* Title */}
+        <Text style={styles.title} numberOfLines={1}>{title}</Text>
+        
+        {/* Address */}
+        <Text style={styles.address} numberOfLines={1}>
+          <Ionicons name="location-outline" size={14} color="#777" /> {address}
+        </Text>
+        
+        {/* Features */}
+        <View style={styles.featuresContainer}>
+          {bedrooms > 0 && (
+            <View style={styles.feature}>
+              <Ionicons name="bed-outline" size={16} color="#555" />
+              <Text style={styles.featureText}>{bedrooms} {bedrooms === 1 ? 'Bed' : 'Beds'}</Text>
+            </View>
+          )}
+          
+          {bathrooms > 0 && (
+            <View style={styles.feature}>
+              <Ionicons name="water-outline" size={16} color="#555" />
+              <Text style={styles.featureText}>{bathrooms} {bathrooms === 1 ? 'Bath' : 'Baths'}</Text>
+            </View>
+          )}
+          
+          {area > 0 && (
+            <View style={styles.feature}>
+              <Ionicons name="square-outline" size={16} color="#555" />
+              <Text style={styles.featureText}>{area} sq ft</Text>
+            </View>
+          )}
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    marginBottom: 16,
+    borderRadius: 12,
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    overflow: 'hidden',
+  },
+  imageContainer: {
+    position: 'relative',
+    height: 180,
+  },
+  image: {
+    width: '100%',
+    height: '100%',
+  },
+  favoriteButton: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  typeTag: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 4,
+    backgroundColor: type === 'rent' ? '#4A80F0' : '#2ecc71',
+  },
+  typeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#fff',
+    textTransform: 'capitalize',
+  },
+  detailsContainer: {
+    padding: 16,
+  },
+  price: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 8,
+  },
+  periodText: {
+    fontSize: 14,
+    fontWeight: 'normal',
+    color: '#777',
+  },
+  title: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 4,
+  },
+  address: {
+    fontSize: 14,
+    color: '#777',
+    marginBottom: 12,
+  },
+  featuresContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+  },
+  feature: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  featureText: {
+    marginLeft: 4,
+    fontSize: 14,
+    color: '#555',
+  },
+});
+
+export default PropertyCard;

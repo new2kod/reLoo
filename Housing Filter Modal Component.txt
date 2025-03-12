@@ -1,0 +1,357 @@
+// client/mobile/src/components/housing/HousingFilterModal.js
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Modal,
+  TouchableOpacity,
+  ScrollView,
+  TouchableWithoutFeedback,
+  Slider
+} from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+
+const propertyTypes = [
+  { label: 'Any Type', value: 'any' },
+  { label: 'Apartment', value: 'apartment' },
+  { label: 'House', value: 'house' },
+  { label: 'Condo', value: 'condo' },
+  { label: 'Townhouse', value: 'townhouse' },
+  { label: 'Studio', value: 'studio' }
+];
+
+const HousingFilterModal = ({ visible, onClose, filters, onApply }) => {
+  const [localFilters, setLocalFilters] = useState({ ...filters });
+  
+  // Reset local filters when modal opens
+  useEffect(() => {
+    if (visible) {
+      setLocalFilters({ ...filters });
+    }
+  }, [visible, filters]);
+  
+  // Handle apply filters
+  const handleApply = () => {
+    onApply(localFilters);
+  };
+  
+  // Format price with thousand separators
+  const formatPrice = (value) => {
+    return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  };
+  
+  // Handle number selection (bedrooms, bathrooms)
+  const handleNumberSelection = (type, value) => {
+    setLocalFilters({
+      ...localFilters,
+      [type]: value
+    });
+  };
+  
+  // Render number selector
+  const renderNumberSelector = (type, label, max = 5) => {
+    const numbers = Array.from({ length: max + 1 }, (_, i) => i);
+    
+    return (
+      <View style={styles.selectorContainer}>
+        <Text style={styles.selectorLabel}>{label}</Text>
+        <View style={styles.numbersContainer}>
+          {numbers.map((num) => (
+            <TouchableOpacity
+              key={num}
+              style={[
+                styles.numberButton,
+                localFilters[type] === num && styles.selectedNumberButton
+              ]}
+              onPress={() => handleNumberSelection(type, num)}
+            >
+              <Text
+                style={[
+                  styles.numberText,
+                  localFilters[type] === num && styles.selectedNumberText
+                ]}
+              >
+                {num === 0 ? 'Any' : num}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+    );
+  };
+  
+  return (
+    <Modal
+      animationType="slide"
+      transparent={true}
+      visible={visible}
+      onRequestClose={onClose}
+    >
+      <TouchableWithoutFeedback onPress={onClose}>
+        <View style={styles.overlay}>
+          <TouchableWithoutFeedback>
+            <View style={styles.modalContainer}>
+              {/* Header */}
+              <View style={styles.header}>
+                <Text style={styles.title}>Filters</Text>
+                <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+                  <Ionicons name="close-outline" size={28} color="#333" />
+                </TouchableOpacity>
+              </View>
+              
+              <ScrollView style={styles.content}>
+                {/* Price Range */}
+                <View style={styles.filterSection}>
+                  <Text style={styles.sectionTitle}>Price Range</Text>
+                  <View style={styles.priceLabels}>
+                    <Text style={styles.priceLabel}>
+                      ${formatPrice(localFilters.minPrice)}
+                    </Text>
+                    <Text style={styles.priceLabel}>
+                      ${formatPrice(localFilters.maxPrice)}
+                    </Text>
+                  </View>
+                  <Slider
+                    style={styles.slider}
+                    minimumValue={0}
+                    maximumValue={10000}
+                    step={100}
+                    value={localFilters.minPrice}
+                    minimumTrackTintColor="#4A80F0"
+                    maximumTrackTintColor="#ddd"
+                    thumbTintColor="#4A80F0"
+                    onValueChange={(value) =>
+                      setLocalFilters({
+                        ...localFilters,
+                        minPrice: value,
+                        maxPrice: Math.max(value + 100, localFilters.maxPrice)
+                      })
+                    }
+                  />
+                  <Slider
+                    style={styles.slider}
+                    minimumValue={0}
+                    maximumValue={10000}
+                    step={100}
+                    value={localFilters.maxPrice}
+                    minimumTrackTintColor="#4A80F0"
+                    maximumTrackTintColor="#ddd"
+                    thumbTintColor="#4A80F0"
+                    onValueChange={(value) =>
+                      setLocalFilters({
+                        ...localFilters,
+                        maxPrice: value,
+                        minPrice: Math.min(value - 100, localFilters.minPrice)
+                      })
+                    }
+                  />
+                </View>
+                
+                {/* Bedrooms & Bathrooms */}
+                <View style={styles.filterSection}>
+                  {renderNumberSelector('bedrooms', 'Bedrooms')}
+                  {renderNumberSelector('bathrooms', 'Bathrooms')}
+                </View>
+                
+                {/* Property Type */}
+                <View style={styles.filterSection}>
+                  <Text style={styles.sectionTitle}>Property Type</Text>
+                  <View style={styles.propertyTypeContainer}>
+                    {propertyTypes.map((type) => (
+                      <TouchableOpacity
+                        key={type.value}
+                        style={[
+                          styles.propertyTypeButton,
+                          localFilters.propertyType === type.value && styles.selectedPropertyType
+                        ]}
+                        onPress={() =>
+                          setLocalFilters({
+                            ...localFilters,
+                            propertyType: type.value
+                          })
+                        }
+                      >
+                        <Text
+                          style={[
+                            styles.propertyTypeText,
+                            localFilters.propertyType === type.value && styles.selectedPropertyTypeText
+                          ]}
+                        >
+                          {type.label}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              </ScrollView>
+              
+              {/* Footer */}
+              <View style={styles.footer}>
+                <TouchableOpacity
+                  style={styles.resetButton}
+                  onPress={() =>
+                    setLocalFilters({
+                      minPrice: 0,
+                      maxPrice: 10000,
+                      bedrooms: 0,
+                      bathrooms: 0,
+                      propertyType: 'any'
+                    })
+                  }
+                >
+                  <Text style={styles.resetButtonText}>Reset</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.applyButton} onPress={handleApply}>
+                  <Text style={styles.applyButtonText}>Apply Filters</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </TouchableWithoutFeedback>
+        </View>
+      </TouchableWithoutFeedback>
+    </Modal>
+  );
+};
+
+const styles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContainer: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: '90%',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  closeButton: {
+    padding: 4,
+  },
+  content: {
+    padding: 16,
+  },
+  filterSection: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 16,
+  },
+  priceLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  priceLabel: {
+    fontSize: 14,
+    color: '#555',
+  },
+  slider: {
+    marginBottom: 16,
+  },
+  selectorContainer: {
+    marginBottom: 16,
+  },
+  selectorLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#333',
+    marginBottom: 12,
+  },
+  numbersContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  numberButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+    marginRight: 12,
+    marginBottom: 12,
+  },
+  selectedNumberButton: {
+    backgroundColor: '#4A80F0',
+  },
+  numberText: {
+    fontSize: 14,
+    color: '#555',
+  },
+  selectedNumberText: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+  propertyTypeContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  propertyTypeButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#f5f5f5',
+    marginRight: 8,
+    marginBottom: 8,
+  },
+  selectedPropertyType: {
+    backgroundColor: '#4A80F0',
+  },
+  propertyTypeText: {
+    fontSize: 14,
+    color: '#555',
+  },
+  selectedPropertyTypeText: {
+    color: '#fff',
+    fontWeight: '500',
+  },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+  },
+  resetButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+  resetButtonText: {
+    fontSize: 16,
+    color: '#777',
+    fontWeight: '500',
+  },
+  applyButton: {
+    backgroundColor: '#4A80F0',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+  },
+  applyButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
+  },
+});
+
+export default HousingFilterModal;

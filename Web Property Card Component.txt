@@ -1,0 +1,121 @@
+// client/web/src/components/housing/PropertyCard.js
+import { useState } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { HeartIcon } from '@heroicons/react/outline';
+import { HeartIcon as HeartIconSolid } from '@heroicons/react/solid';
+
+const PropertyCard = ({ property, onFavoriteToggle }) => {
+  const {
+    id,
+    title,
+    price,
+    currency = 'USD',
+    type,
+    address,
+    bedrooms,
+    bathrooms,
+    area,
+    photos,
+    isFavorite: initialFavorite = false
+  } = property;
+
+  const [isFavorite, setIsFavorite] = useState(initialFavorite);
+
+  // Format price with thousand separators
+  const formatPrice = (value) => {
+    return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  };
+
+  // Handle favorite toggle
+  const handleFavoriteClick = (e) => {
+    e.preventDefault(); // Prevent Link navigation
+    setIsFavorite(!isFavorite);
+    if (onFavoriteToggle) {
+      onFavoriteToggle(id);
+    }
+  };
+
+  return (
+    <Link href={`/housing/${id}`}>
+      <div className="group bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden cursor-pointer">
+        {/* Property Image */}
+        <div className="relative h-48">
+          <Image
+            src={photos && photos.length > 0 ? photos[0] : 'https://via.placeholder.com/300x200'}
+            alt={title}
+            layout="fill"
+            objectFit="cover"
+            className="group-hover:scale-105 transition-transform duration-300"
+          />
+          
+          {/* Favorite Button */}
+          <button
+            onClick={handleFavoriteClick}
+            className="absolute top-3 right-3 p-2 bg-black/30 rounded-full hover:bg-black/50 transition-colors"
+          >
+            {isFavorite ? (
+              <HeartIconSolid className="h-5 w-5 text-red-500" />
+            ) : (
+              <HeartIcon className="h-5 w-5 text-white" />
+            )}
+          </button>
+          
+          {/* Property Type Tag */}
+          <div className={`absolute top-3 left-3 px-3 py-1 rounded text-white text-sm font-semibold capitalize
+            ${type === 'rent' ? 'bg-blue-600' : 'bg-green-500'}`}>
+            {type}
+          </div>
+        </div>
+        
+        {/* Property Details */}
+        <div className="p-4">
+          {/* Price */}
+          <div className="flex items-baseline mb-2">
+            <span className="text-xl font-bold text-gray-900">
+              {currency === 'USD' ? '$' : currency}{formatPrice(price)}
+            </span>
+            {type === 'rent' && (
+              <span className="ml-1 text-sm text-gray-500">/month</span>
+            )}
+          </div>
+          
+          {/* Title */}
+          <h3 className="text-base font-semibold text-gray-900 truncate mb-1">
+            {title}
+          </h3>
+          
+          {/* Address */}
+          <p className="text-sm text-gray-600 truncate flex items-center mb-3">
+            <span className="inline-block mr-1">📍</span>
+            {address}
+          </p>
+          
+          {/* Features */}
+          <div className="flex items-center space-x-4 text-sm text-gray-600">
+            {bedrooms > 0 && (
+              <span className="flex items-center">
+                <span className="mr-1">🛏️</span>
+                {bedrooms} {bedrooms === 1 ? 'Bed' : 'Beds'}
+              </span>
+            )}
+            {bathrooms > 0 && (
+              <span className="flex items-center">
+                <span className="mr-1">🛁</span>
+                {bathrooms} {bathrooms === 1 ? 'Bath' : 'Baths'}
+              </span>
+            )}
+            {area > 0 && (
+              <span className="flex items-center">
+                <span className="mr-1">📏</span>
+                {area} sq ft
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    </Link>
+  );
+};
+
+export default PropertyCard;

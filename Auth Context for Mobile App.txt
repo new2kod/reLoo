@@ -1,0 +1,164 @@
+// client/mobile/src/contexts/AuthContext.js
+import React, { createContext, useState, useEffect, useContext } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import auth from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore';
+
+const AuthContext = createContext();
+
+export const useAuth = () => useContext(AuthContext);
+
+export const AuthProvider = ({ children }) => {
+  const [currentUser, setCurrentUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [userDetails, setUserDetails] = useState(null);
+
+  // Listen for auth state changes
+  useEffect(() => {
+    const unsubscribe = auth().onAuthStateChanged(async (user) => {
+      setCurrentUser(user);
+      
+      if (user) {
+        // Get user details from Firestore
+        const userDoc = await firestore().collection('users').doc(user.uid).get();
+        if (userDoc.exists) {
+          setUserDetails(userDoc.data());
+        }
+        
+        // Store user token
+        const token = await user.getIdToken();
+        await AsyncStorage.setItem('userToken', token);
+      } else {
+        // Clear user token
+        setUserDetails(null);
+        await AsyncStorage.removeItem('userToken');
+      }
+      
+      setLoading(false);
+    });
+
+    return unsubscribe;
+  }, []);
+
+  // Register with email and password
+  const register = async (email, password, name) => {
+    try {
+      const response = await auth().createUserWithEmailAndPassword(email, password);
+      const user = response.user;
+      
+      // Update user profile
+      await user.updateProfile({
+        displayName: name
+      });
+      
+      // Create user document in Firestore
+      await firestore().collection('users').doc(user.uid).set({
+        email,
+        name,
+        createdAt: firestore.FieldValue.serverTimestamp(),
+        premium: false,
+        preferences: {},
+        savedItems: {}
+      });
+      
+      return user;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  // Sign in with email and password
+  const login = async (email, password) => {
+    try {
+      const response = await auth().signInWithEmailAndPassword(email, password);
+      return response.user;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  // Sign out
+  const logout = async () => {
+    try {
+      await auth().signOut();
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  // Google sign in
+  const signInWithGoogle = async () => {
+    try {
+      // Implementation would use GoogleSignin library
+      throw new Error('Google sign-in not implemented yet');
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  // Reset password
+  const resetPassword = async (email) => {
+    try {
+      await auth().sendPasswordResetEmail(email);
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  // Update profile
+  const updateProfile = async (data) => {
+    try {
+      if (!currentUser) {
+        throw new Error('No user logged in');
+      }
+      
+      await firestore().collection('users').doc(currentUser.uid).update(data);
+      
+      // Refresh user details
+      const userDoc = await firestore().collection('users').doc(currentUser.uid).get();
+      setUserDetails(userDoc.data());
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  // Upgrade to premium
+  const upgradeToPremium = async () => {
+    try {
+      if (!currentUser) {
+        throw new Error('No user logged in');
+      }
+      
+      // In a real app, this would involve payment processing
+      await firestore().collection('users').doc(currentUser.uid).update({
+        premium: true,
+        premiumSince: firestore.FieldValue.serverTimestamp()
+      });
+      
+      // Refresh user details
+      const userDoc = await firestore().collection('users').doc(currentUser.uid).get();
+      setUserDetails(userDoc.data());
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const value = {
+    currentUser,
+    userDetails,
+    loading,
+    register,
+    login,
+    logout,
+    signInWithGoogle,
+    resetPassword,
+    updateProfile,
+    upgradeToPremium
+  };
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
+};

@@ -1,0 +1,112 @@
+// client/mobile/src/services/housingService.js
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_URL } from '../config/constants';
+
+// Create axios instance with base URL
+const api = axios.create({
+  baseURL: `${API_URL}/housing`
+});
+
+// Add token to requests
+api.interceptors.request.use(
+  async (config) => {
+    const token = await AsyncStorage.getItem('userToken');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Get rental listings
+export const getRentalListings = async (params) => {
+  try {
+    const response = await api.get('/rentals', { params });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+// Get property listings for sale
+export const getPropertyListings = async (params) => {
+  try {
+    const response = await api.get('/properties', { params });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+// Get neighborhood information
+export const getNeighborhoodInfo = async (neighborhoodId) => {
+  try {
+    const response = await api.get(`/neighborhoods/${neighborhoodId}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+// Get recommended neighborhoods based on preferences
+export const getRecommendedNeighborhoods = async (preferences) => {
+  try {
+    const response = await api.post('/neighborhoods/recommend', preferences);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+// Save favorite listing
+export const saveFavorite = async (listingId, listingType) => {
+  try {
+    const response = await api.post('/favorites', { listingId, listingType });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+// Remove favorite listing
+export const removeFavorite = async (favoriteId) => {
+  try {
+    const response = await api.delete(`/favorites/${favoriteId}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+// Get all saved favorites
+export const getFavorites = async () => {
+  try {
+    const response = await api.get('/favorites');
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+// Contact property owner/agent
+export const contactPropertyOwner = async (listingId, message) => {
+  try {
+    const response = await api.post('/contact', { listingId, message });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export default {
+  getRentalListings,
+  getPropertyListings,
+  getNeighborhoodInfo,
+  getRecommendedNeighborhoods,
+  saveFavorite,
+  removeFavorite,
+  getFavorites,
+  contactPropertyOwner
+};
